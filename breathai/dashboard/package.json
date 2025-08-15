@@ -1,0 +1,16 @@
+{
+	"name": "breathai-dashboard",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "esbuild src/index.js --bundle --outfile=../backend/public-dashboard/app.js --minify",
+		"dev": "esbuild src/index.js --bundle --servedir=public --outfile=public/app.js --sourcemap --watch"
+	},
+	"dependencies": {
+		"leaflet": "^1.9.4"
+	},
+	"devDependencies": {
+		"esbuild": "^0.21.5"
+	}
+}

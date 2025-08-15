@@ -70,6 +70,7 @@ erDiagram
 - View on-device risk score
 - Sync when online
 - View public health heatmap
+- Export anonymized aggregates for research (non-clinical)
 
 ## Sequence: Offline first then sync
 ```mermaid
