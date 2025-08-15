@@ -1,0 +1,9 @@
+sample_rate: 16000
+# For demo/synthetic data. For real app, consider 10-20 seconds.
+duration_seconds: 2.0
+# Training params
+batch_size: 32
+epochs: 10
+learning_rate: 0.001
+validation_split: 0.2
+model_version: "1.0.0"
