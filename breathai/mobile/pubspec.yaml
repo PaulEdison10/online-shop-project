@@ -25,3 +25,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/model/breathai.tflite
+    - assets/model/label_map.json
+    - assets/model/metadata.json

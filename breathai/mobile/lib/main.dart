@@ -1,8 +1,14 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:uuid/uuid.dart';
+
+import 'models/screening.dart';
+import 'services/audio_recorder.dart';
+import 'services/inference.dart';
+import 'services/sync_service.dart';
 
 void main() async {
 	WidgetsFlutterBinding.ensureInitialized();
@@ -32,28 +38,47 @@ class _HomePageState extends State<HomePage> {
 	bool _recording = false;
 	String? _label;
 	double? _score;
+	final _rec = AudioRecorderService();
+	final _infer = InferenceService();
+	final _sync = SyncService('http://10.0.2.2:8080'); // Android emulator loopback
 
 	Future<void> _recordAndInfer() async {
 		setState(() { _recording = true; _label = null; _score = null; });
-		await Future.delayed(const Duration(seconds: 1));
-		// TODO: integrate actual audio recording and TFLite inference
-		// Placeholder result
-		final label = 'Abnormal';
-		final score = 0.72;
+		try {
+			final pcm = await _rec.recordPcmFloats(seconds: 10);
+			await _infer.init();
+			final result = await _infer.runOnPcmFloat(pcm);
+			final pos = await _getPositionOrNull();
+			final payload = ScreeningPayload(
+				deviceId: 'demo-device',
+				timestamp: DateTime.now().toUtc().toIso8601String(),
+				latitude: pos?.latitude,
+				longitude: pos?.longitude,
+				riskScore: (result['score'] as num).toDouble(),
+				riskLabel: result['label'] as String,
+				confidences: Map<String, double>.from((result['probs'] as Map).map((k, v) => MapEntry(k as String, (v as num).toDouble()))),
+				modelVersion: result['modelVersion'] as String,
+				offlineId: const Uuid().v4(),
+			);
+			final box = Hive.box('screenings');
+			await box.put(payload.offlineId, payload.toJson());
+			await _sync.sync();
+			setState(() { _label = payload.riskLabel; _score = payload.riskScore; });
+		} catch (e) {
+			setState(() { _label = 'Error'; _score = 0; });
+		} finally {
+			setState(() { _recording = false; });
+		}
+	}
 
-		final box = Hive.box('screenings');
-		final offlineId = DateTime.now().millisecondsSinceEpoch.toString();
-		final payload = {
-			'deviceId': 'demo-device',
-			'timestamp': DateTime.now().toUtc().toIso8601String(),
-			'riskScore': score,
-			'riskLabel': label,
-			'confidences': {'Normal': 1 - score, 'Abnormal': score},
-			'modelVersion': '1.0.0',
-			'offlineId': offlineId,
-		};
-		await box.put(offlineId, payload);
-		setState(() { _recording = false; _label = label; _score = score; });
+	Future<Position?> _getPositionOrNull() async {
+		try {
+			final perm = await Geolocator.requestPermission();
+			if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) return null;
+			return await Geolocator.getCurrentPosition();
+		} catch (_) {
+			return null;
+		}
 	}
 
 	@override
@@ -72,7 +97,7 @@ class _HomePageState extends State<HomePage> {
 						if (_label != null) Card(
 							child: Padding(
 								padding: const EdgeInsets.all(16),
-								child: Text('Result: $_label (${((_score ?? 0)*100).toStringAsFixed(1)}%)'),
+								child: Text('Result: $_label ${_score != null ? '(${((_score ?? 0)*100).toStringAsFixed(1)}%)' : ''}'),
 							),
 						),
 						const SizedBox(height: 16),
@@ -84,7 +109,7 @@ class _HomePageState extends State<HomePage> {
 									return ListView.builder(
 										itemCount: items.length,
 										itemBuilder: (context, idx) {
-											final s = items[idx] as Map;
+											final s = Map<String, dynamic>.from(items[idx]);
 											return ListTile(
 												title: Text('${s['riskLabel']} ${(s['riskScore']*100).toStringAsFixed(0)}%'),
 												subtitle: Text(s['timestamp']),
