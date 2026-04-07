@@ -1,0 +1,29 @@
+name: breathai_mobile
+description: Offline breath pre-screening with on-device TFLite
+publish_to: 'none'
+version: 1.0.0+1
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  tflite_flutter: ^0.10.4
+  record: ^5.1.2
+  geolocator: ^11.0.0
+  permission_handler: ^11.3.1
+  path_provider: ^2.1.3
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  http: ^1.2.2
+  uuid: ^4.4.2
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.2
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/model/breathai.tflite
+    - assets/model/label_map.json
+    - assets/model/metadata.json

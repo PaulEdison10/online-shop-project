@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>BreathAI Dashboard</title>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+	<style>
+		html, body, #app { height: 100%; margin: 0; }
+		#map { height: 100%; width: 100%; }
+		.stats { position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 8px 12px; border-radius: 8px; font-family: sans-serif; }
+	</style>
+</head>
+<body>
+	<div id="app">
+		<div class="stats">
+			<div>Total: <span id="total">-</span></div>
+			<div>Last 24h: <span id="last24h">-</span></div>
+			<div>Abnormal Rate: <span id="abRate">-</span></div>
+		</div>
+		<div id="map"></div>
+	</div>
+	<script src="app.js"></script>
+</body>
+</html>
